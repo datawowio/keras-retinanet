@@ -75,7 +75,7 @@ def create_models(num_classes, weights='imagenet', multi_gpu=0):
         loss={
             'regression'    : losses.smooth_l1(),
             'classification': losses.focal()
-        },
+            },
         optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
     )
 
@@ -92,9 +92,10 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         checkpoint = keras.callbacks.ModelCheckpoint(
             os.path.join(
                 args.snapshot_path,
-                'resnet50_{dataset_type}_{{epoch:02d}}.h5'.format(dataset_type=args.dataset_type)
+                'resnet50_gender_detection_full_dataset.h5'.format(dataset_type=args.dataset_type)
             ),
-            verbose=1
+            verbose=1,
+            save_best_only=True,
         )
         checkpoint = RedirectModel(checkpoint, prediction_model)
         callbacks.append(checkpoint)
@@ -268,9 +269,11 @@ def main(args=None):
     # start training
     training_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch=args.steps,
+        steps_per_epoch=55269/args.batch_size,
         epochs=args.epochs,
         verbose=1,
+        validation_steps=8980/args.batch_size,
+        validation_data=validation_generator,
         callbacks=callbacks,
     )
 
